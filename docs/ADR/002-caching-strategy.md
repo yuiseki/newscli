@@ -29,12 +29,16 @@ Use an XDG-style local cache with TTL-based freshness.
   - articles
 
 ### 3. Cache usage rules
-- `news sync` stores today's snapshot under today's date path.
-- `news list --date YYYY-MM-DD` reads that day's snapshot.
+- `news sync` stores:
+  - today's primary snapshot at today's date path
+  - additional snapshots partitioned by each article's `publishedAt` date
+- `news list --date YYYY-MM-DD` reads that date's snapshot.
 - For today's snapshot, TTL and option compatibility (`opmlPath` / `limit`) are checked.
 - For past snapshots, cache is read-only and returned as-is.
 - `--sync` is only supported for today.
+- If `publishedAt` is missing or invalid, that article falls back to today's date bucket.
 
 ## Consequences
 - Stable repeated reads without network access within TTL.
+- Past-date lookup works even when articles were fetched on a later sync date.
 - Cache invalidates safely when input shape changes.

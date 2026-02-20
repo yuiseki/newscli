@@ -13,6 +13,10 @@
       <outline text="読売新聞" type="rss" xmlUrl="https://assets.wor.jp/rss/rdf/yomiuri/latestnews.rdf" />
       <outline text="産経新聞" type="rss" xmlUrl="https://assets.wor.jp/rss/rdf/sankei/affairs.rdf" />
       <outline text="日本経済新聞" type="rss" xmlUrl="https://assets.wor.jp/rss/rdf/nikkei/news.rdf" />
+      <outline text="NHK ニュース (国際)" type="rss" xmlUrl="https://www3.nhk.or.jp/rss/news/cat6.xml" />
+      <outline text="Yahoo! ニュース (経済)" type="rss" xmlUrl="https://news.yahoo.co.jp/rss/topics/business.xml" />
+      <outline text="The Japan Times" type="rss" xmlUrl="https://www.japantimes.co.jp/feed/topstories/" />
+      <outline text="Reuters Japan (Google News)" type="rss" xmlUrl="https://news.google.com/rss/search?q=site:reuters.com+Japan&amp;hl=en-US&amp;gl=US&amp;ceid=US:en" />
     </outline>
 
     <!-- International -->
@@ -22,13 +26,29 @@
       <outline text="The Guardian - World" type="rss" xmlUrl="https://www.theguardian.com/world/rss" />
       <outline text="Al Jazeera - All" type="rss" xmlUrl="https://www.aljazeera.com/xml/rss/all.xml" />
       <outline text="ReliefWeb - Updates" type="rss" xmlUrl="https://reliefweb.int/updates/rss.xml" />
+      <outline text="NPR News" type="rss" xmlUrl="https://feeds.npr.org/1001/rss.xml" />
+      <outline text="Reuters World (Google News)" type="rss" xmlUrl="https://news.google.com/rss/search?q=site:reuters.com+world&amp;hl=en-US&amp;gl=US&amp;ceid=US:en" />
+      <outline text="AP News (Google News)" type="rss" xmlUrl="https://news.google.com/rss/search?q=site:apnews.com&amp;hl=en-US&amp;gl=US&amp;ceid=US:en" />
+      <outline text="France 24 (English)" type="rss" xmlUrl="https://www.france24.com/en/rss" />
+      <outline text="EuroNews (English)" type="rss" xmlUrl="https://www.euronews.com/rss?format=xml" />
+      <outline text="CNN - World" type="rss" xmlUrl="http://rss.cnn.com/rss/cnn_world.rss" />
+      <outline text="The Diplomat" type="rss" xmlUrl="https://thediplomat.com/feed/" />
     </outline>
 
     <!-- Others -->
     <outline text="Others">
       <outline text="BBC - Africa" type="rss" xmlUrl="https://feeds.bbci.co.uk/news/world/africa/rss.xml" />
       <outline text="Global Voices - Asia" type="rss" xmlUrl="https://globalvoices.org/-/world/asia/feed/" />
-      <outline text="WTO - Latest News" type="rss" xmlUrl="http://www.wto.org/library/rss/latest_news_e.xml" />
+      <outline text="WTO (Google News)" type="rss" xmlUrl="https://news.google.com/rss/search?q=site:wto.org+trade&amp;hl=en-US&amp;gl=US&amp;ceid=US:en" />
+      <outline text="UN News" type="rss" xmlUrl="https://news.un.org/feed/subscribe/en/news/all/rss.xml" />
+      <outline text="WHO - News" type="rss" xmlUrl="https://www.who.int/rss-feeds/news-english.xml" />
+      <outline text="IAEA - Top News" type="rss" xmlUrl="https://www.iaea.org/feeds/topnews" />
+      <outline text="CrisisWatch" type="rss" xmlUrl="https://www.crisisgroup.org/rss" />
+      <outline text="BBC - Asia" type="rss" xmlUrl="https://feeds.bbci.co.uk/news/world/asia/rss.xml" />
+      <outline text="BBC - Latin America" type="rss" xmlUrl="https://feeds.bbci.co.uk/news/world/latin_america/rss.xml" />
+      <outline text="Africanews" type="rss" xmlUrl="https://www.africanews.com/feed/rss" />
+      <outline text="CNA" type="rss" xmlUrl="https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml" />
+      <outline text="Foreign Policy" type="rss" xmlUrl="https://foreignpolicy.com/feed/" />
     </outline>
   </body>
 </opml>

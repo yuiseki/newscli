@@ -61,8 +61,8 @@ Cache file layout:
 
 Notes:
 
-- `news sync` stores today's snapshot.
-- `news ls --date YYYY-MM-DD` reads that day's snapshot.
+- `news sync` stores today's snapshot and also stores per-article `publishedAt` date snapshots.
+- `news ls --date YYYY-MM-DD` reads that date's snapshot.
 - Past date snapshots are cache-only (`--sync` is today-only).
 
 ## Development

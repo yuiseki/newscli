@@ -7,7 +7,7 @@ import {
 } from './storage';
 import { readFeedSourcesFromOpml } from './opml';
 import { fetchArticlesFromSources } from './api';
-import { type LoadedNews, type NewsCache } from './types';
+import { type Article, type LoadedNews, type NewsCache } from './types';
 
 export type LoadNewsOptions = {
   cacheDir: string;
@@ -17,6 +17,56 @@ export type LoadNewsOptions = {
   limitPerFeed: number;
   cacheTtlMinutes: number;
 };
+
+const DATE_KEY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+function isValidDateKey(dateKey: string): boolean {
+  const match = dateKey.match(DATE_KEY_PATTERN);
+  if (!match) return false;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const probe = new Date(year, month - 1, day);
+  return (
+    probe.getFullYear() === year &&
+    probe.getMonth() === month - 1 &&
+    probe.getDate() === day
+  );
+}
+
+export function resolvePublishedDateKey(publishedAt?: string): string | null {
+  if (!publishedAt) return null;
+
+  const leadingDateMatch = publishedAt.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (leadingDateMatch) {
+    return isValidDateKey(leadingDateMatch[1]) ? leadingDateMatch[1] : null;
+  }
+
+  const parsed = new Date(publishedAt);
+  if (!Number.isFinite(parsed.getTime())) return null;
+  return formatDateKey(parsed);
+}
+
+export function groupArticlesByPublishedDate(
+  articles: Article[],
+  fallbackDateKey: string,
+): Map<string, Article[]> {
+  const grouped = new Map<string, Article[]>();
+
+  for (const article of articles) {
+    const dateKey = resolvePublishedDateKey(article.publishedAt) ?? fallbackDateKey;
+    const bucket = grouped.get(dateKey);
+    if (bucket) {
+      bucket.push(article);
+      continue;
+    }
+
+    grouped.set(dateKey, [article]);
+  }
+
+  return grouped;
+}
 
 export async function loadNews(options: LoadNewsOptions): Promise<LoadedNews> {
   const cacheDir = getCacheDir(options.cacheDir);
@@ -56,7 +106,7 @@ export async function loadNews(options: LoadNewsOptions): Promise<LoadedNews> {
     }
 
     throw new Error(
-      `No cache snapshot for ${options.dateKey}. Run "news sync" on that day to keep history.`,
+      `No cache snapshot for ${options.dateKey}. Run "news sync" to ingest articles into published-date cache.`,
     );
   }
 
@@ -75,6 +125,15 @@ export async function loadNews(options: LoadNewsOptions): Promise<LoadedNews> {
   };
 
   saveCache(cacheDir, options.dateKey, cacheData);
+  const groupedByDate = groupArticlesByPublishedDate(fetched.articles, options.dateKey);
+  for (const [dateKey, articles] of groupedByDate) {
+    if (dateKey === options.dateKey) continue;
+    saveCache(cacheDir, dateKey, {
+      ...cacheData,
+      snapshotDate: dateKey,
+      articles,
+    });
+  }
 
   return {
     fromCache: false,
