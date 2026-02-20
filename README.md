@@ -8,16 +8,24 @@ Global and Japan news CLI with OPML-based RSS feeds and local cache.
 npm i -g @yuiseki/newscli
 ```
 
+Installed command:
+
+- `news` (recommended)
+- `newscli` (compatibility alias)
+
 ## Usage
 
 ```bash
-newscli --help
+news --help
 ```
 
 ### Main commands
 
-- `newscli` / `newscli list` / `newscli ls`: list headlines (cache-first)
-- `newscli sync`: fetch feeds now and refresh cache
+- `news` / `news list` / `news ls`: list headlines (cache-first)
+- `news sync`: fetch feeds now and refresh cache
+
+Text output format example:
+- `- [2026-02-21 08:13] [NHK ニュース] headline title`
 
 ### Options
 
@@ -33,17 +41,17 @@ newscli --help
 Examples:
 
 ```bash
-newscli --japan
-newscli list --category International --limit 5
-newscli sync --json
+news --japan
+news list --category International --limit 5
+news sync --json
 ```
 
 ## Cache
 
 Default cache directory:
 
-- `$XDG_CACHE_HOME/newscli` if `XDG_CACHE_HOME` is set
-- `~/.cache/newscli` otherwise
+- `$XDG_CACHE_HOME/news` if `XDG_CACHE_HOME` is set
+- `~/.cache/news` otherwise
 
 Cache file:
 

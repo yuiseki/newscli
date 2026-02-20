@@ -4,6 +4,7 @@
   "description": "Global and Japan news CLI with OPML-based RSS feeds",
   "main": "dist/index.js",
   "bin": {
+    "news": "dist/index.js",
     "newscli": "dist/index.js"
   },
   "files": [

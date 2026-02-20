@@ -19,7 +19,7 @@ const envSchema = z.object({
 
 function defaultCacheDir(): string {
   const cacheBase = process.env.XDG_CACHE_HOME || path.join(os.homedir(), '.cache');
-  return path.join(cacheBase, 'newscli');
+  return path.join(cacheBase, 'news');
 }
 
 function defaultOpmlPath(): string {

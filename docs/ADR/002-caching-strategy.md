@@ -13,9 +13,9 @@ Use an XDG-style local cache with TTL-based freshness.
 - If `NEWSCLI_CACHE_DIR` is set:
   - `<NEWSCLI_CACHE_DIR>`
 - Else if `XDG_CACHE_HOME` is set:
-  - `<XDG_CACHE_HOME>/newscli`
+  - `<XDG_CACHE_HOME>/news`
 - Otherwise:
-  - `~/.cache/newscli`
+  - `~/.cache/news`
 
 ### 2. Cache file
 - Path: `<cache-root>/news.json`
@@ -28,11 +28,11 @@ Use an XDG-style local cache with TTL-based freshness.
   - articles
 
 ### 3. Cache usage rules
-- `newscli list` uses cache when all conditions are met:
+- `news list` uses cache when all conditions are met:
   - TTL is valid
   - OPML path matches
   - per-feed limit matches
-- `newscli --sync` and `newscli sync` always refresh cache.
+- `news --sync` and `news sync` always refresh cache.
 
 ## Consequences
 - Stable repeated reads without network access within TTL.

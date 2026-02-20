@@ -72,6 +72,25 @@ export function resolveCategoryFilters(options: {
   return Array.from(deduped.values());
 }
 
+export function formatPublishedAtLabel(publishedAt?: string): string {
+  if (!publishedAt) return 'Unknown';
+
+  const isoLikeMatch = publishedAt.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/);
+  if (isoLikeMatch) {
+    return `${isoLikeMatch[1]} ${isoLikeMatch[2]}`;
+  }
+
+  const parsed = new Date(publishedAt);
+  if (!Number.isFinite(parsed.getTime())) return 'Unknown';
+
+  const year = String(parsed.getFullYear());
+  const month = String(parsed.getMonth() + 1).padStart(2, '0');
+  const day = String(parsed.getDate()).padStart(2, '0');
+  const hour = String(parsed.getHours()).padStart(2, '0');
+  const minute = String(parsed.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hour}:${minute}`;
+}
+
 function filterArticles(articles: Article[], categoryFilters: string[]): Article[] {
   if (categoryFilters.length === 0) return articles;
 
@@ -119,7 +138,7 @@ function printTextOutput(payload: {
   warnings: Array<{ source: string; message: string }>;
   categoryFilters: string[];
 }): void {
-  console.log(`NewsCLI (${payload.fromCache ? 'Cache' : 'Fresh'})`);
+  console.log(`news (${payload.fromCache ? 'Cache' : 'Fresh'})`);
   console.log(`Updated: ${payload.updatedAt}`);
 
   if (payload.categoryFilters.length > 0) {
@@ -137,7 +156,8 @@ function printTextOutput(payload: {
 
     console.log(`\n>>> ${category} <<<`);
     for (const article of categoryArticles) {
-      console.log(`[${article.source}] ${article.title}`);
+      const publishedAtLabel = formatPublishedAtLabel(article.publishedAt);
+      console.log(`- [${publishedAtLabel}] [${article.source}] ${article.title}`);
       console.log(`  ${article.link}`);
     }
   }
@@ -261,17 +281,12 @@ function buildProgram(): Command {
   const program = new Command();
 
   program
-    .name('newscli')
+    .name('news')
     .description('Global and Japan news CLI with OPML-based RSS feeds')
     .version('0.1.0');
 
-  configureListLikeOptions(program).action(async (options) => {
-    await executeList(options as ListCommandOptions);
-  });
-
   configureListLikeOptions(
-    program
-      .command('list')
+    program.command('list', { isDefault: true })
       .alias('ls')
       .description('List news headlines from cache or RSS feeds'),
   ).action(async (options) => {

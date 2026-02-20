@@ -1,5 +1,9 @@
 import { expect, test } from 'vitest';
-import { parsePositiveIntegerOption, resolveCategoryFilters } from '../src/index';
+import {
+  formatPublishedAtLabel,
+  parsePositiveIntegerOption,
+  resolveCategoryFilters,
+} from '../src/index';
 
 test('parsePositiveIntegerOption parses valid integer', () => {
   expect(parsePositiveIntegerOption('5', '--limit')).toBe(5);
@@ -21,4 +25,13 @@ test('resolveCategoryFilters merges shortcuts and comma-separated categories', (
   });
 
   expect(filters).toEqual(['Japan', 'International', 'Others']);
+});
+
+test('formatPublishedAtLabel keeps iso-like timestamp text', () => {
+  expect(formatPublishedAtLabel('2026-02-21T08:13:59+09:00')).toBe('2026-02-21 08:13');
+});
+
+test('formatPublishedAtLabel falls back to Unknown for invalid or empty value', () => {
+  expect(formatPublishedAtLabel(undefined)).toBe('Unknown');
+  expect(formatPublishedAtLabel('not-a-date')).toBe('Unknown');
 });

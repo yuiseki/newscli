@@ -10,12 +10,12 @@ The original implementation had all logic in a single file and relied on implici
 Define a `commander`-based CLI with explicit commands and compatibility flags.
 
 ### 1. Root command
-- Binary: `newscli`
-- Version: `newscli --version`
+- Binary: `news` (`newscli` alias is kept for compatibility)
+- Version: `news --version`
 
 ### 2. List command
-- `newscli`
-- `newscli list` (alias: `newscli ls`)
+- `news`
+- `news list` (alias: `news ls`)
 - Options:
   - `--sync`
   - `--category <name>`
@@ -27,7 +27,7 @@ Define a `commander`-based CLI with explicit commands and compatibility flags.
   - `--cache-ttl-minutes <minutes>`
 
 ### 3. Sync command
-- `newscli sync`
+- `news sync`
 - Options:
   - `--limit <number>`
   - `--json`
