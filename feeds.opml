@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head>
+    <title>NewsCLI Feeds</title>
+  </head>
+  <body>
+    <!-- Japan (Domestic) -->
+    <outline text="Japan">
+      <outline text="NHK ニュース" type="rss" xmlUrl="https://www3.nhk.or.jp/rss/news/cat0.xml" />
+      <outline text="Yahoo! ニュース (国内)" type="rss" xmlUrl="https://news.yahoo.co.jp/rss/topics/domestic.xml" />
+      <outline text="朝日新聞" type="rss" xmlUrl="http://rss.asahi.com/rss/asahi/newsheadlines.rdf" />
+      <outline text="毎日新聞" type="rss" xmlUrl="https://mainichi.jp/rss/etc/mainichi-flash.rss" />
+      <outline text="読売新聞" type="rss" xmlUrl="https://assets.wor.jp/rss/rdf/yomiuri/latestnews.rdf" />
+      <outline text="産経新聞" type="rss" xmlUrl="https://assets.wor.jp/rss/rdf/sankei/affairs.rdf" />
+      <outline text="日本経済新聞" type="rss" xmlUrl="https://assets.wor.jp/rss/rdf/nikkei/news.rdf" />
+    </outline>
+
+    <!-- International -->
+    <outline text="International">
+      <outline text="BBC - World" type="rss" xmlUrl="https://feeds.bbci.co.uk/news/world/rss.xml" />
+      <outline text="DW - Top Stories" type="rss" xmlUrl="https://rss.dw.com/rdf/rss-en-top" />
+      <outline text="The Guardian - World" type="rss" xmlUrl="https://www.theguardian.com/world/rss" />
+      <outline text="Al Jazeera - All" type="rss" xmlUrl="https://www.aljazeera.com/xml/rss/all.xml" />
+    </outline>
+
+    <!-- Others -->
+    <outline text="Others">
+      <outline text="BBC - Africa" type="rss" xmlUrl="https://feeds.bbci.co.uk/news/world/africa/rss.xml" />
+      <outline text="Global Voices - Asia" type="rss" xmlUrl="https://globalvoices.org/-/world/asia/feed/" />
+      <outline text="WTO - Latest News" type="rss" xmlUrl="http://www.wto.org/library/rss/latest_news_e.xml" />
+    </outline>
+  </body>
+</opml>

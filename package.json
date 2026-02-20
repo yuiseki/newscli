@@ -1,0 +1,50 @@
+{
+  "name": "@yuiseki/newscli",
+  "version": "0.1.0",
+  "description": "Global and Japan news CLI with OPML-based RSS feeds",
+  "main": "dist/index.js",
+  "bin": {
+    "newscli": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "docs",
+    "feeds.opml"
+  ],
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepack": "npm run build",
+    "test": "npm run build && vitest run",
+    "test:watch": "vitest",
+    "start": "node dist/index.js",
+    "sync": "node dist/index.js sync"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "news",
+    "rss",
+    "cli"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "commander": "^14.0.3",
+    "dotenv": "^17.3.1",
+    "rss-parser": "^3.13.0",
+    "xml2js": "^0.6.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.0",
+    "@types/xml2js": "^0.4.14",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}
