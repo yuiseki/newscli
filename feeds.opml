@@ -21,6 +21,7 @@
       <outline text="DW - Top Stories" type="rss" xmlUrl="https://rss.dw.com/rdf/rss-en-top" />
       <outline text="The Guardian - World" type="rss" xmlUrl="https://www.theguardian.com/world/rss" />
       <outline text="Al Jazeera - All" type="rss" xmlUrl="https://www.aljazeera.com/xml/rss/all.xml" />
+      <outline text="ReliefWeb - Updates" type="rss" xmlUrl="https://reliefweb.int/updates/rss.xml" />
     </outline>
 
     <!-- Others -->

@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 import {
   formatPublishedAtLabel,
+  parseDateOption,
   parsePositiveIntegerOption,
   resolveCategoryFilters,
 } from '../src/index';
@@ -34,4 +35,23 @@ test('formatPublishedAtLabel keeps iso-like timestamp text', () => {
 test('formatPublishedAtLabel falls back to Unknown for invalid or empty value', () => {
   expect(formatPublishedAtLabel(undefined)).toBe('Unknown');
   expect(formatPublishedAtLabel('not-a-date')).toBe('Unknown');
+});
+
+test('parseDateOption resolves today when omitted', () => {
+  const parsed = parseDateOption(undefined, new Date(2026, 1, 20));
+  expect(parsed).toEqual({ dateKey: '2026-02-20', isToday: true });
+});
+
+test('parseDateOption parses explicit date', () => {
+  const parsed = parseDateOption('2026-02-19', new Date(2026, 1, 20));
+  expect(parsed).toEqual({ dateKey: '2026-02-19', isToday: false });
+});
+
+test('parseDateOption rejects invalid formats', () => {
+  expect(() => parseDateOption('2026-02', new Date(2026, 1, 20))).toThrow(
+    '--date format must be yyyy-mm-dd.',
+  );
+  expect(() => parseDateOption('2026-02-30', new Date(2026, 1, 20))).toThrow(
+    '--date must be a valid calendar date.',
+  );
 });

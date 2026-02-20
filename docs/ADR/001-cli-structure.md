@@ -18,6 +18,7 @@ Define a `commander`-based CLI with explicit commands and compatibility flags.
 - `news list` (alias: `news ls`)
 - Options:
   - `--sync`
+  - `--date <yyyy-mm-dd>`
   - `--category <name>`
   - `--japan` / `--international` / `--others`
   - `--limit <number>`

@@ -30,6 +30,7 @@ Text output format example:
 ### Options
 
 - `--sync`: force refresh when listing
+- `--date <yyyy-mm-dd>`: read a specific day snapshot from cache
 - `--category <name>`: filter category (comma-separated)
 - `--japan`, `--international`, `--others`: category shortcuts
 - `--limit <number>`: max items per feed (default: `3`)
@@ -42,6 +43,7 @@ Examples:
 
 ```bash
 news --japan
+news ls --date 2026-02-20
 news list --category International --limit 5
 news sync --json
 ```
@@ -53,9 +55,15 @@ Default cache directory:
 - `$XDG_CACHE_HOME/news` if `XDG_CACHE_HOME` is set
 - `~/.cache/news` otherwise
 
-Cache file:
+Cache file layout:
 
-- `news.json`
+- `<cache-root>/YYYY/MM/DD/news.json`
+
+Notes:
+
+- `news sync` stores today's snapshot.
+- `news ls --date YYYY-MM-DD` reads that day's snapshot.
+- Past date snapshots are cache-only (`--sync` is today-only).
 
 ## Development
 

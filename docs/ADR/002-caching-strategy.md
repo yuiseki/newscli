@@ -18,9 +18,10 @@ Use an XDG-style local cache with TTL-based freshness.
   - `~/.cache/news`
 
 ### 2. Cache file
-- Path: `<cache-root>/news.json`
+- Path: `<cache-root>/YYYY/MM/DD/news.json`
 - Stored fields:
   - cache version
+  - snapshot date
   - OPML path
   - per-feed limit
   - updated timestamp
@@ -28,11 +29,11 @@ Use an XDG-style local cache with TTL-based freshness.
   - articles
 
 ### 3. Cache usage rules
-- `news list` uses cache when all conditions are met:
-  - TTL is valid
-  - OPML path matches
-  - per-feed limit matches
-- `news --sync` and `news sync` always refresh cache.
+- `news sync` stores today's snapshot under today's date path.
+- `news list --date YYYY-MM-DD` reads that day's snapshot.
+- For today's snapshot, TTL and option compatibility (`opmlPath` / `limit`) are checked.
+- For past snapshots, cache is read-only and returned as-is.
+- `--sync` is only supported for today.
 
 ## Consequences
 - Stable repeated reads without network access within TTL.

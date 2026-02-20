@@ -21,6 +21,7 @@ export type FetchWarning = {
 
 export type NewsCache = {
   version: 1;
+  snapshotDate?: string;
   opmlPath: string;
   limitPerFeed: number;
   updatedAt: string;

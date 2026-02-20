@@ -3,10 +3,12 @@ import path from 'path';
 import { Command } from 'commander';
 import { config, setConfigOverrides, type NewsCliConfig } from './config';
 import { loadNews } from './news';
+import { formatDateKey } from './storage';
 import { type Article } from './types';
 
 type ListCommandOptions = {
   sync?: boolean;
+  date?: string;
   category?: string;
   japan?: boolean;
   international?: boolean;
@@ -37,6 +39,42 @@ export function parsePositiveIntegerOption(value: string, optionName: string): n
   }
 
   return parsed;
+}
+
+export function parseDateOption(
+  value: string | undefined,
+  now: Date = new Date(),
+): { dateKey: string; isToday: boolean } {
+  const todayDateKey = formatDateKey(now);
+  if (!value) {
+    return {
+      dateKey: todayDateKey,
+      isToday: true,
+    };
+  }
+
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    throw new Error('--date format must be yyyy-mm-dd.');
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const probe = new Date(year, month - 1, day);
+  if (
+    probe.getFullYear() !== year ||
+    probe.getMonth() !== month - 1 ||
+    probe.getDate() !== day
+  ) {
+    throw new Error('--date must be a valid calendar date.');
+  }
+
+  const dateKey = `${match[1]}-${match[2]}-${match[3]}`;
+  return {
+    dateKey,
+    isToday: dateKey === todayDateKey,
+  };
 }
 
 function normalizeCategory(value: string): string {
@@ -132,6 +170,7 @@ function configureRuntimeOptions(options: {
 
 function printTextOutput(payload: {
   fromCache: boolean;
+  dateKey: string;
   updatedAt: string;
   categories: string[];
   articles: Article[];
@@ -139,6 +178,7 @@ function printTextOutput(payload: {
   categoryFilters: string[];
 }): void {
   console.log(`news (${payload.fromCache ? 'Cache' : 'Fresh'})`);
+  console.log(`Date: ${payload.dateKey}`);
   console.log(`Updated: ${payload.updatedAt}`);
 
   if (payload.categoryFilters.length > 0) {
@@ -176,6 +216,7 @@ function printTextOutput(payload: {
 
 async function executeList(options: ListCommandOptions): Promise<void> {
   configureRuntimeOptions(options);
+  const dateOption = parseDateOption(options.date);
 
   const limitPerFeed = options.limit
     ? parsePositiveIntegerOption(options.limit, '--limit')
@@ -183,6 +224,7 @@ async function executeList(options: ListCommandOptions): Promise<void> {
 
   const loaded = await loadNews({
     cacheDir: config.NEWSCLI_CACHE_DIR,
+    dateKey: dateOption.dateKey,
     opmlPath: config.NEWSCLI_OPML_PATH,
     forceSync: Boolean(options.sync),
     limitPerFeed,
@@ -203,6 +245,7 @@ async function executeList(options: ListCommandOptions): Promise<void> {
 
   const jsonPayload = {
     fromCache: loaded.fromCache,
+    date: dateOption.dateKey,
     updatedAt: loaded.updatedAt,
     categories,
     articles,
@@ -216,6 +259,7 @@ async function executeList(options: ListCommandOptions): Promise<void> {
 
   printTextOutput({
     ...jsonPayload,
+    dateKey: dateOption.dateKey,
     warnings: warningFilters.map((warning) => ({
       source: warning.source,
       message: warning.message,
@@ -226,6 +270,7 @@ async function executeList(options: ListCommandOptions): Promise<void> {
 
 async function executeSync(options: SyncCommandOptions): Promise<void> {
   configureRuntimeOptions(options);
+  const todayDateKey = formatDateKey(new Date());
 
   const limitPerFeed = options.limit
     ? parsePositiveIntegerOption(options.limit, '--limit')
@@ -233,6 +278,7 @@ async function executeSync(options: SyncCommandOptions): Promise<void> {
 
   const loaded = await loadNews({
     cacheDir: config.NEWSCLI_CACHE_DIR,
+    dateKey: todayDateKey,
     opmlPath: config.NEWSCLI_OPML_PATH,
     forceSync: true,
     limitPerFeed,
@@ -240,6 +286,7 @@ async function executeSync(options: SyncCommandOptions): Promise<void> {
   });
 
   const summaryPayload = {
+    date: todayDateKey,
     updatedAt: loaded.updatedAt,
     categories: loaded.categories,
     articleCount: loaded.articles.length,
@@ -253,6 +300,7 @@ async function executeSync(options: SyncCommandOptions): Promise<void> {
   }
 
   console.log('Sync completed.');
+  console.log(`Date: ${summaryPayload.date}`);
   console.log(`Updated: ${summaryPayload.updatedAt}`);
   console.log(`Categories: ${summaryPayload.categories.length}`);
   console.log(`Articles: ${summaryPayload.articleCount}`);
@@ -266,6 +314,7 @@ async function executeSync(options: SyncCommandOptions): Promise<void> {
 function configureListLikeOptions(command: Command): Command {
   return command
     .option('--sync', 'Force refresh and ignore fresh cache')
+    .option('-d, --date <yyyy-mm-dd>', 'Read cache snapshot for a specific date')
     .option('-c, --category <category>', 'Filter categories (comma separated)')
     .option('--japan', 'Shortcut for --category Japan')
     .option('--international', 'Shortcut for --category International')
@@ -314,12 +363,16 @@ export async function runCli(argv: string[] = process.argv): Promise<void> {
 }
 
 if (require.main === module) {
-  runCli().catch((error: unknown) => {
-    if (error instanceof Error) {
-      console.error(`Error: ${error.message}`);
-    } else {
-      console.error('Error:', error);
-    }
-    process.exit(1);
-  });
+  runCli()
+    .then(() => {
+      process.exit(0);
+    })
+    .catch((error: unknown) => {
+      if (error instanceof Error) {
+        console.error(`Error: ${error.message}`);
+      } else {
+        console.error('Error:', error);
+      }
+      process.exit(1);
+    });
 }

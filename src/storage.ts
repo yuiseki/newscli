@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { type NewsCache } from './types';
 
+const DATE_KEY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
 function ensureDirectory(dirPath: string): void {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
@@ -13,8 +15,41 @@ export function getCacheDir(baseDir: string): string {
   return baseDir;
 }
 
-export function getCachePath(cacheDir: string): string {
-  return path.join(cacheDir, 'news.json');
+export function formatDateKey(date: Date): string {
+  const year = String(date.getFullYear());
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getDatePathParts(dateKey: string): { year: string; month: string; day: string } {
+  const match = dateKey.match(DATE_KEY_PATTERN);
+  if (!match) {
+    throw new Error('dateKey must be yyyy-mm-dd.');
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const probe = new Date(year, month - 1, day);
+  if (
+    probe.getFullYear() !== year ||
+    probe.getMonth() !== month - 1 ||
+    probe.getDate() !== day
+  ) {
+    throw new Error('dateKey must be a valid calendar date.');
+  }
+
+  return {
+    year: match[1],
+    month: match[2],
+    day: match[3],
+  };
+}
+
+export function getCachePath(cacheDir: string, dateKey: string): string {
+  const parts = getDatePathParts(dateKey);
+  return path.join(cacheDir, parts.year, parts.month, parts.day, 'news.json');
 }
 
 function isArticleLike(value: unknown): boolean {
@@ -34,6 +69,7 @@ function isNewsCache(value: unknown): value is NewsCache {
   const record = value as Record<string, unknown>;
   return (
     record.version === 1 &&
+    (typeof record.snapshotDate === 'undefined' || typeof record.snapshotDate === 'string') &&
     typeof record.opmlPath === 'string' &&
     typeof record.limitPerFeed === 'number' &&
     typeof record.updatedAt === 'string' &&
@@ -44,7 +80,8 @@ function isNewsCache(value: unknown): value is NewsCache {
   );
 }
 
-export function loadCache(cachePath: string): NewsCache | null {
+export function loadCache(cacheDir: string, dateKey: string): NewsCache | null {
+  const cachePath = getCachePath(cacheDir, dateKey);
   if (!fs.existsSync(cachePath)) return null;
 
   try {
@@ -56,7 +93,8 @@ export function loadCache(cachePath: string): NewsCache | null {
   }
 }
 
-export function saveCache(cachePath: string, cache: NewsCache): void {
+export function saveCache(cacheDir: string, dateKey: string, cache: NewsCache): void {
+  const cachePath = getCachePath(cacheDir, dateKey);
   const dir = path.dirname(cachePath);
   ensureDirectory(dir);
   fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2), 'utf8');
