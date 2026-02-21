@@ -16,6 +16,7 @@ Define a `commander`-based CLI with explicit commands and compatibility flags.
 ### 2. List command
 - `news`
 - `news list` (alias: `news ls`)
+- Default date range (without `--date`): yesterday + today
 - Options:
   - `--sync`
   - `--date <yyyy-mm-dd>`
@@ -26,11 +27,14 @@ Define a `commander`-based CLI with explicit commands and compatibility flags.
   - `--opml <path>`
   - `--cache-dir <path>`
   - `--cache-ttl-minutes <minutes>`
+- Behavior notes:
+  - `--date` switches to single-day mode.
+  - default `news ls --sync` refreshes today and reads yesterday from cache if available.
 
 ### 3. Sync command
 - `news sync`
 - Options:
-  - `--limit <number>`
+  - `--limit <number>` (optional cap; default is uncapped/all available items)
   - `--json`
   - `--opml <path>`
   - `--cache-dir <path>`
@@ -39,4 +43,4 @@ Define a `commander`-based CLI with explicit commands and compatibility flags.
 ## Consequences
 - Runtime behavior is explicit and testable.
 - Legacy category shortcut flags continue to work.
-- Output can be consumed as text or JSON.
+- Output can be consumed as text or JSON (`dateKeys` is included in JSON list output).

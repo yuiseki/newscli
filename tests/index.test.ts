@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest';
 import {
+  defaultListDateKeys,
   formatPublishedAtLabel,
   parseDateOption,
   parsePositiveIntegerOption,
@@ -40,6 +41,11 @@ test('formatPublishedAtLabel falls back to Unknown for invalid or empty value', 
 test('parseDateOption resolves today when omitted', () => {
   const parsed = parseDateOption(undefined, new Date(2026, 1, 20));
   expect(parsed).toEqual({ dateKey: '2026-02-20', isToday: true });
+});
+
+test('defaultListDateKeys resolves today and yesterday', () => {
+  const keys = defaultListDateKeys(new Date(2026, 1, 21));
+  expect(keys).toEqual(['2026-02-21', '2026-02-20']);
 });
 
 test('parseDateOption parses explicit date', () => {

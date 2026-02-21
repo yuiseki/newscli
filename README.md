@@ -21,7 +21,7 @@ news --help
 
 ### Main commands
 
-- `news` / `news list` / `news ls`: list headlines (cache-first)
+- `news` / `news list` / `news ls`: list headlines (cache-first, default range: yesterday + today)
 - `news sync`: fetch feeds now and refresh cache (all available RSS items by default)
 
 Text output format example:
@@ -30,7 +30,7 @@ Text output format example:
 ### Options
 
 - `--sync`: force refresh when listing
-- `--date <yyyy-mm-dd>`: read a specific day snapshot from cache
+- `--date <yyyy-mm-dd>`: read only that specific day snapshot
 - `--category <name>`: filter category (comma-separated)
 - `--japan`, `--international`, `--others`: category shortcuts
 - `--limit <number>`: max items per feed for `news ls` (default: `3`)
@@ -42,6 +42,7 @@ Text output format example:
 Examples:
 
 ```bash
+news ls
 news --japan
 news ls --date 2026-02-20
 news list --category International --limit 5
@@ -63,9 +64,13 @@ Notes:
 
 - `news sync` stores today's snapshot and also stores per-article `publishedAt` date snapshots.
 - `news sync` fetches all items by default. Use `news sync --limit <n>` only if you want to cap it.
+- `news ls` default is yesterday + today. Use `--date` for a single day.
+- `news ls --sync` (without `--date`) refreshes today, and reads yesterday from cache if available.
+- If yesterday snapshot is missing, default `news ls` shows only today.
 - `news ls --date YYYY-MM-DD` reads only that date bucket (older/newer articles are excluded).
 - Articles without usable `publishedAt` are ignored.
 - Past date snapshots are cache-only (`--sync` is today-only).
+- JSON output includes `date` and `dateKeys` (`dateKeys` is one item for `--date`, two items for default range).
 
 ## Development
 

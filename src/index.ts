@@ -28,6 +28,15 @@ type SyncCommandOptions = {
   cacheTtlMinutes?: string;
 };
 
+type LoadedDateChunk = {
+  dateKey: string;
+  fromCache: boolean;
+  updatedAt: string;
+  categories: string[];
+  articles: Article[];
+  warnings: Array<{ category: string; source: string; url: string; message: string }>;
+};
+
 export function parsePositiveIntegerOption(value: string, optionName: string): number {
   if (!/^\d+$/.test(value)) {
     throw new Error(`${optionName} must be a positive integer.`);
@@ -75,6 +84,13 @@ export function parseDateOption(
     dateKey,
     isToday: dateKey === todayDateKey,
   };
+}
+
+export function defaultListDateKeys(now: Date = new Date()): string[] {
+  const today = new Date(now);
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  return [formatDateKey(today), formatDateKey(yesterday)];
 }
 
 function normalizeCategory(value: string): string {
@@ -168,6 +184,43 @@ function configureRuntimeOptions(options: {
   }
 }
 
+function isNoCacheSnapshotError(error: unknown): boolean {
+  return error instanceof Error && error.message.startsWith('No cache snapshot for ');
+}
+
+function mergeCategoriesInOrder(chunks: LoadedDateChunk[]): string[] {
+  const merged: string[] = [];
+  const seen = new Set<string>();
+
+  for (const chunk of chunks) {
+    for (const category of chunk.categories) {
+      if (seen.has(category)) continue;
+      seen.add(category);
+      merged.push(category);
+    }
+  }
+
+  return merged;
+}
+
+function resolveLatestUpdatedAt(chunks: LoadedDateChunk[]): string {
+  if (chunks.length === 0) return new Date(0).toISOString();
+
+  let latest = chunks[0].updatedAt;
+  let latestMs = new Date(latest).getTime();
+
+  for (const chunk of chunks.slice(1)) {
+    const currentMs = new Date(chunk.updatedAt).getTime();
+    if (!Number.isFinite(currentMs)) continue;
+    if (!Number.isFinite(latestMs) || currentMs > latestMs) {
+      latest = chunk.updatedAt;
+      latestMs = currentMs;
+    }
+  }
+
+  return latest;
+}
+
 function printTextOutput(payload: {
   fromCache: boolean;
   dateKey: string;
@@ -216,38 +269,104 @@ function printTextOutput(payload: {
 
 async function executeList(options: ListCommandOptions): Promise<void> {
   configureRuntimeOptions(options);
-  const dateOption = parseDateOption(options.date);
 
   const limitPerFeed = options.limit
     ? parsePositiveIntegerOption(options.limit, '--limit')
     : 3;
 
-  const loaded = await loadNews({
-    cacheDir: config.NEWSCLI_CACHE_DIR,
-    dateKey: dateOption.dateKey,
-    opmlPath: config.NEWSCLI_OPML_PATH,
-    forceSync: Boolean(options.sync),
-    limitPerFeed,
-    cacheTtlMinutes: config.NEWSCLI_CACHE_TTL_MINUTES,
-  });
+  const dateChunks: LoadedDateChunk[] = [];
+
+  if (options.date) {
+    const dateOption = parseDateOption(options.date);
+    const loaded = await loadNews({
+      cacheDir: config.NEWSCLI_CACHE_DIR,
+      dateKey: dateOption.dateKey,
+      opmlPath: config.NEWSCLI_OPML_PATH,
+      forceSync: Boolean(options.sync),
+      limitPerFeed,
+      cacheTtlMinutes: config.NEWSCLI_CACHE_TTL_MINUTES,
+    });
+
+    dateChunks.push({
+      dateKey: dateOption.dateKey,
+      fromCache: loaded.fromCache,
+      updatedAt: loaded.updatedAt,
+      categories: loaded.categories,
+      articles: filterArticlesByDateKey(loaded.articles, dateOption.dateKey),
+      warnings: loaded.warnings,
+    });
+  } else {
+    const [todayDateKey, yesterdayDateKey] = defaultListDateKeys();
+    const loadedToday = await loadNews({
+      cacheDir: config.NEWSCLI_CACHE_DIR,
+      dateKey: todayDateKey,
+      opmlPath: config.NEWSCLI_OPML_PATH,
+      forceSync: Boolean(options.sync),
+      limitPerFeed,
+      cacheTtlMinutes: config.NEWSCLI_CACHE_TTL_MINUTES,
+    });
+
+    dateChunks.push({
+      dateKey: todayDateKey,
+      fromCache: loadedToday.fromCache,
+      updatedAt: loadedToday.updatedAt,
+      categories: loadedToday.categories,
+      articles: filterArticlesByDateKey(loadedToday.articles, todayDateKey),
+      warnings: loadedToday.warnings,
+    });
+
+    try {
+      const loadedYesterday = await loadNews({
+        cacheDir: config.NEWSCLI_CACHE_DIR,
+        dateKey: yesterdayDateKey,
+        opmlPath: config.NEWSCLI_OPML_PATH,
+        forceSync: false,
+        limitPerFeed,
+        cacheTtlMinutes: config.NEWSCLI_CACHE_TTL_MINUTES,
+      });
+
+      dateChunks.push({
+        dateKey: yesterdayDateKey,
+        fromCache: loadedYesterday.fromCache,
+        updatedAt: loadedYesterday.updatedAt,
+        categories: loadedYesterday.categories,
+        articles: filterArticlesByDateKey(loadedYesterday.articles, yesterdayDateKey),
+        warnings: loadedYesterday.warnings,
+      });
+    } catch (error) {
+      if (!isNoCacheSnapshotError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  const dateLabel = dateChunks
+    .map((chunk) => chunk.dateKey)
+    .sort()
+    .join(', ');
+  const allCategories = mergeCategoriesInOrder(dateChunks);
+  const allArticles = dateChunks.flatMap((chunk) => chunk.articles);
+  const allWarnings = dateChunks.flatMap((chunk) => chunk.warnings);
+  const fromCache = dateChunks.every((chunk) => chunk.fromCache);
+  const updatedAt = resolveLatestUpdatedAt(dateChunks);
 
   const categoryFilters = resolveCategoryFilters(options);
-  const categories = filterCategories(loaded.categories, categoryFilters);
-  const dateScopedArticles = filterArticlesByDateKey(loaded.articles, dateOption.dateKey);
-  const articles = filterArticles(dateScopedArticles, categoryFilters);
+  const categories = filterCategories(allCategories, categoryFilters);
+  const articles = filterArticles(allArticles, categoryFilters);
   const warningFilters =
     categoryFilters.length === 0
-      ? loaded.warnings
-      : loaded.warnings.filter((warning) =>
+      ? allWarnings
+      : allWarnings.filter((warning) =>
           categoryFilters.some(
             (categoryFilter) => normalizeCategory(categoryFilter) === normalizeCategory(warning.category),
           ),
         );
 
   const jsonPayload = {
-    fromCache: loaded.fromCache,
-    date: dateOption.dateKey,
-    updatedAt: loaded.updatedAt,
+    fromCache,
+    date: dateLabel,
+    dateKeys: dateChunks.map((chunk) => chunk.dateKey).sort(),
+    updatedAt,
     categories,
     articles,
     warnings: warningFilters,
@@ -260,7 +379,7 @@ async function executeList(options: ListCommandOptions): Promise<void> {
 
   printTextOutput({
     ...jsonPayload,
-    dateKey: dateOption.dateKey,
+    dateKey: dateLabel,
     warnings: warningFilters.map((warning) => ({
       source: warning.source,
       message: warning.message,

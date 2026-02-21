@@ -34,6 +34,8 @@ Use an XDG-style local cache with TTL-based freshness.
   - additional snapshots partitioned by each article's `publishedAt` date
 - `news sync` default behavior is uncapped per-feed ingestion (all items available in each RSS response).
 - `news list --date YYYY-MM-DD` reads that date's snapshot.
+- Default `news list` (without `--date`) reads yesterday and today snapshots.
+- If yesterday snapshot is missing, default `news list` continues with today's snapshot only.
 - Date reads are strict to the target day bucket: articles outside the target day are excluded.
 - Articles with unknown/unparseable `publishedAt` are excluded from cache and output.
 - For today's snapshot, TTL and option compatibility are checked:
