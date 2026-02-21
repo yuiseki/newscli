@@ -2,7 +2,7 @@
 import path from 'path';
 import { Command } from 'commander';
 import { config, setConfigOverrides, type NewsCliConfig } from './config';
-import { loadNews } from './news';
+import { filterArticlesByDateKey, loadNews } from './news';
 import { formatDateKey } from './storage';
 import { type Article } from './types';
 
@@ -233,7 +233,8 @@ async function executeList(options: ListCommandOptions): Promise<void> {
 
   const categoryFilters = resolveCategoryFilters(options);
   const categories = filterCategories(loaded.categories, categoryFilters);
-  const articles = filterArticles(loaded.articles, categoryFilters);
+  const dateScopedArticles = filterArticlesByDateKey(loaded.articles, dateOption.dateKey);
+  const articles = filterArticles(dateScopedArticles, categoryFilters);
   const warningFilters =
     categoryFilters.length === 0
       ? loaded.warnings
@@ -274,7 +275,7 @@ async function executeSync(options: SyncCommandOptions): Promise<void> {
 
   const limitPerFeed = options.limit
     ? parsePositiveIntegerOption(options.limit, '--limit')
-    : 3;
+    : Number.MAX_SAFE_INTEGER;
 
   const loaded = await loadNews({
     cacheDir: config.NEWSCLI_CACHE_DIR,
@@ -345,7 +346,7 @@ function buildProgram(): Command {
   program
     .command('sync')
     .description('Refresh feed cache now')
-    .option('-l, --limit <number>', 'Number of items per feed (default: 3)')
+    .option('-l, --limit <number>', 'Optional per-feed cap for sync (default: all items)')
     .option('-j, --json', 'Output as JSON')
     .option('--opml <path>', 'Override OPML feed file path')
     .option('--cache-dir <path>', 'Override cache directory')

@@ -32,11 +32,16 @@ Use an XDG-style local cache with TTL-based freshness.
 - `news sync` stores:
   - today's primary snapshot at today's date path
   - additional snapshots partitioned by each article's `publishedAt` date
+- `news sync` default behavior is uncapped per-feed ingestion (all items available in each RSS response).
 - `news list --date YYYY-MM-DD` reads that date's snapshot.
-- For today's snapshot, TTL and option compatibility (`opmlPath` / `limit`) are checked.
+- Date reads are strict to the target day bucket: articles outside the target day are excluded.
+- Articles with unknown/unparseable `publishedAt` are excluded from cache and output.
+- For today's snapshot, TTL and option compatibility are checked:
+  - `opmlPath` must match
+  - cache `limitPerFeed` must be greater than or equal to requested `--limit`
+- When reading cache with a larger `limitPerFeed`, output is trimmed per feed to the requested `--limit`.
 - For past snapshots, cache is read-only and returned as-is.
 - `--sync` is only supported for today.
-- If `publishedAt` is missing or invalid, that article falls back to today's date bucket.
 
 ## Consequences
 - Stable repeated reads without network access within TTL.

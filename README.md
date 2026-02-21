@@ -22,7 +22,7 @@ news --help
 ### Main commands
 
 - `news` / `news list` / `news ls`: list headlines (cache-first)
-- `news sync`: fetch feeds now and refresh cache
+- `news sync`: fetch feeds now and refresh cache (all available RSS items by default)
 
 Text output format example:
 - `- [2026-02-21 08:13] [NHK ニュース] headline title`
@@ -33,7 +33,7 @@ Text output format example:
 - `--date <yyyy-mm-dd>`: read a specific day snapshot from cache
 - `--category <name>`: filter category (comma-separated)
 - `--japan`, `--international`, `--others`: category shortcuts
-- `--limit <number>`: max items per feed (default: `3`)
+- `--limit <number>`: max items per feed for `news ls` (default: `3`)
 - `--json`: JSON output
 - `--opml <path>`: override OPML file path
 - `--cache-dir <path>`: override cache directory
@@ -62,7 +62,9 @@ Cache file layout:
 Notes:
 
 - `news sync` stores today's snapshot and also stores per-article `publishedAt` date snapshots.
-- `news ls --date YYYY-MM-DD` reads that date's snapshot.
+- `news sync` fetches all items by default. Use `news sync --limit <n>` only if you want to cap it.
+- `news ls --date YYYY-MM-DD` reads only that date bucket (older/newer articles are excluded).
+- Articles without usable `publishedAt` are ignored.
 - Past date snapshots are cache-only (`--sync` is today-only).
 
 ## Development

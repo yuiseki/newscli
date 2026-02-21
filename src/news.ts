@@ -68,6 +68,36 @@ export function groupArticlesByPublishedDate(
   return grouped;
 }
 
+export function applyPerFeedLimit(articles: Article[], limitPerFeed: number): Article[] {
+  const feedCounters = new Map<string, number>();
+  const limited: Article[] = [];
+
+  for (const article of articles) {
+    const feedKey = `${article.category}\u0000${article.source}`;
+    const count = feedCounters.get(feedKey) ?? 0;
+    if (count >= limitPerFeed) continue;
+
+    limited.push(article);
+    feedCounters.set(feedKey, count + 1);
+  }
+
+  return limited;
+}
+
+export function filterArticlesWithKnownPublishedDate(articles: Article[]): Article[] {
+  return articles.filter((article) => resolvePublishedDateKey(article.publishedAt) !== null);
+}
+
+export function filterArticlesByDateKey(
+  articles: Article[],
+  dateKey: string,
+): Article[] {
+  return articles.filter((article) => {
+    const resolvedDateKey = resolvePublishedDateKey(article.publishedAt);
+    return resolvedDateKey === dateKey;
+  });
+}
+
 export async function loadNews(options: LoadNewsOptions): Promise<LoadedNews> {
   const cacheDir = getCacheDir(options.cacheDir);
   const todayDateKey = formatDateKey(new Date());
@@ -75,26 +105,29 @@ export async function loadNews(options: LoadNewsOptions): Promise<LoadedNews> {
   const cached = loadCache(cacheDir, options.dateKey);
 
   if (cached && !options.forceSync) {
+    const datedCachedArticles = filterArticlesWithKnownPublishedDate(cached.articles);
+    const dateScopedCachedArticles = filterArticlesByDateKey(datedCachedArticles, options.dateKey);
+
     if (!isTargetToday) {
       return {
         fromCache: true,
         updatedAt: cached.updatedAt,
         categories: cached.categories,
-        articles: cached.articles,
+        articles: applyPerFeedLimit(dateScopedCachedArticles, options.limitPerFeed),
         warnings: [],
       };
     }
 
     if (
       cached.opmlPath === options.opmlPath &&
-      cached.limitPerFeed === options.limitPerFeed &&
+      cached.limitPerFeed >= options.limitPerFeed &&
       isCacheFresh(cached, options.cacheTtlMinutes)
     ) {
       return {
         fromCache: true,
         updatedAt: cached.updatedAt,
         categories: cached.categories,
-        articles: cached.articles,
+        articles: applyPerFeedLimit(dateScopedCachedArticles, options.limitPerFeed),
         warnings: [],
       };
     }
@@ -113,6 +146,7 @@ export async function loadNews(options: LoadNewsOptions): Promise<LoadedNews> {
   const { sources, categories } = await readFeedSourcesFromOpml(options.opmlPath);
   const fetched = await fetchArticlesFromSources(sources, options.limitPerFeed);
   const updatedAt = new Date().toISOString();
+  const datedFetchedArticles = filterArticlesWithKnownPublishedDate(fetched.articles);
 
   const cacheData: NewsCache = {
     version: 1,
@@ -121,13 +155,14 @@ export async function loadNews(options: LoadNewsOptions): Promise<LoadedNews> {
     limitPerFeed: options.limitPerFeed,
     updatedAt,
     categories,
-    articles: fetched.articles,
+    articles: datedFetchedArticles,
   };
 
-  saveCache(cacheDir, options.dateKey, cacheData);
-  const groupedByDate = groupArticlesByPublishedDate(fetched.articles, options.dateKey);
+  const groupedByDate = groupArticlesByPublishedDate(datedFetchedArticles, options.dateKey);
+  if (!groupedByDate.has(options.dateKey)) {
+    groupedByDate.set(options.dateKey, []);
+  }
   for (const [dateKey, articles] of groupedByDate) {
-    if (dateKey === options.dateKey) continue;
     saveCache(cacheDir, dateKey, {
       ...cacheData,
       snapshotDate: dateKey,
@@ -139,7 +174,7 @@ export async function loadNews(options: LoadNewsOptions): Promise<LoadedNews> {
     fromCache: false,
     updatedAt,
     categories,
-    articles: fetched.articles,
+    articles: datedFetchedArticles,
     warnings: fetched.warnings,
   };
 }
